@@ -1,0 +1,11 @@
+Estas consultas: 
+SELECT city.Name, country.Name
+FROM city
+INNER JOIN country ON city.CountryCode = country.Code AND country.Name = 'Argentina';
+
+SELECT city.Name, country.Name
+FROM city
+INNER JOIN country ON city.CountryCode = country.Code
+WHERE country.Name = 'Argentina';
+sí devuelven los mismos valores ya que lo que ambas están haciendo es obtener todas las ciudades que pertenezcan a algún pais (cuyos CountryCode(city) and Code(country) coincidan) y luego añade la condición de que el nombre de dicho país debe ser Argentina.
+Si en vez de INNER JOIN tuviéramos un LEFT JOIN, la condición de que el nombre del país debe ser Argentina termina haciendo que los resultados sean los mismos. Esto se debe a que todas las ciudades tienen asignado un país, no hay ninguna ciudad extra con el campo de countryCode NULL cuando hacemos LEFT JOIN.
