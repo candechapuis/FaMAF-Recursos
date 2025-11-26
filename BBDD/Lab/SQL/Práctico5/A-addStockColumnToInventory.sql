@@ -1,0 +1,4 @@
+USE `sakila`;
+
+ALTER TABLE inventory
+ADD stock SMALLINT NOT NULL DEFAULT '5';

@@ -1,0 +1,430 @@
+use('mflix');
+
+//Ej. 1
+
+db.runCommand({
+    collMod: "users",
+    validator: {
+        $jsonSchema: {
+            bsonType: "object",
+            required: ["name", "email","password"],
+            properties: {
+                name: {
+                    bsonType: "string",
+                    maxLength: 30,
+                },
+                email: {
+                    bsonType: "string",
+                    pattern: "^(.*)@(.*)\\.(.{2,4})$"
+                },
+                password: {
+                    bsonType: "string",
+                    minLength: 50
+                }
+            }
+        }
+    }
+});
+
+// 5 valid and 5 invalid users
+db.users.insertMany([
+    {name: "Jennifer Coolidge", email: "jenny@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    {name: "Juan Alvarez", email: "juanelo@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    {name: "Arturo SoreteDuro", email: "durazni@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    {name: "Armando Fasyto", email: "fumate1@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    {name: "Susana Horia", email: "carrot@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkAhdjhjhjhjhjhjhjh"},
+    //password fails
+    {name: "Oscar el de la Esquina", email: "osqui66@gmail.com", password: "hjugitolpjhytsmnb"},
+    // name fails
+    {name: "Maria Susana Asuzena de los Valles Rocosos de Mar Chiquita", email: "jenny@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    // email fails
+    {name: "Shakira", email: "no tengo mail", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    // requirements fail
+    {email: "jenny@gmail.com", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"},
+    {name: "Jennifer Coolidge", password: "hjugitolpjhytsmnbcgtruijdponhjdyuidopkujytrebnhdcop"}
+]);
+
+//Ej. 2
+
+db.getCollectionInfos({name: "users"});
+
+//Ej. 3
+
+db.runCommand(
+    {
+        collMod: "theaters",
+        validator: {
+            $jsonSchema: {
+                bsonType: "object",
+                required: ["theaterId", "location"],
+                properties: {
+                    theaterId: {
+                        bsonType: "int"
+                    },
+                    location: {
+                        bsonType: "object",
+                        required: ["address"],
+                        properties: {
+                            address: {
+                                bsonType: "object",
+                                required: [
+                                    "street1", 
+                                    "city", 
+                                    "state",
+                                    "zipcode"
+                                ],
+                                properties: {
+                                    street1: {
+                                        bsonType: "string"
+                                    },
+                                    city: {
+                                        bsonType: "string"
+                                    },
+                                    state: {
+                                        bsonType: "string"
+                                    },
+                                    zipcode: {
+                                        bsonType: "string"
+                                    },
+                                }
+                            },
+                            geo: {
+                                bsonType: "object",
+                                properties: {
+                                    type: {
+                                        enum: ["Point", null],
+                                    },
+                                    coordinates: {
+                                        bsonType: "array",
+                                        items: [
+                                            {
+                                                bsonType: "double"
+                                            },
+                                        ],
+                                        minItems: 2,
+                                        maxItems: 2
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        validationAction: "warn"
+    } 
+);
+
+// 2 valid and 3 invalid theaters
+
+db.theaters.insertMany([
+    {theaterId: 45678, 
+        location: {
+            address: {
+                street1: "hdsjjdk",
+                city: "sjdhsj",
+                state: "sdhsadkj",
+                zipcode: "kjdhsdk"
+            }
+    }},
+    {theaterId: 889900,
+        location: {
+            address: {
+                street1: "hdsjjdk",
+                city: "sjdhsj",
+                state: "sdhsadkj",
+                zipcode: "kjdhsdk"
+            },
+            geo: {
+                type: "Point",
+                coordinates: [-90.6678, 43.7889]
+            }
+        }    
+    },
+    //requirements fail
+    {theaterId: 1122776},
+    // address's properties type fail
+    {theaterId: 9999000, 
+        location: {
+            address: {
+                street1: 9988,
+                city: "sjdhsj",
+                state: "sdhsadkj",
+                zipcode: "kjdhsdk"
+            }
+    }},
+    // geo's type type fail
+    {theaterId: 889660,
+        location: {
+            address: {
+                street1: "hdsjjdk",
+                city: "sjdhsj",
+                state: "sdhsadkj",
+                zipcode: "kjdhsdk"
+            },
+            geo: {
+                type: "hola",
+                coordinates: [-90.6678, 34.77889]
+            }
+        }    
+    },
+    
+]);
+
+//Ej. 4
+
+db.runCommand({
+    collMod: "movies",
+    validator: {
+        $jsonSchema: {
+            bsonType: "object",
+            required: ["title", "year"],
+            properties: {
+                title: {
+                    bsonType: "string"
+                },
+                year: {
+                    bsonType: "int",
+                    minimum: 1900,
+                    maximum: 3000
+                },
+                cast: {
+                    bsonType: "array",
+                    items: {
+                        bsonType: "string"
+                    },
+                    uniqueItems: true,
+                },
+                directors: {
+                    bsonType: "array",
+                    items: {
+                        bsonType: "string"
+                    },
+                    uniqueItems: true,
+                },
+                countries: {
+                    bsonType: "array",
+                    items: {
+                        bsonType: "string"
+                    },
+                    uniqueItems: true,
+                },
+                genres: {
+                    bsonType: "array",
+                    items: {
+                        bsonType: "string"
+                    },
+                    uniqueItems: true,
+                }
+            }
+        }
+    }
+});
+
+// valid documents
+db.movies.insertMany([
+    {
+        title: "Brother Bear", 
+        year: NumberInt(2003),
+        cast: ["Joaquin Phoenix", "Jeremy Suarez"],
+        directors: ["Aaron Blaise", "Robert Walker"],
+        countries: ["United States"],
+        genres: ["Adventure", "Comedy"]    
+    },
+    {
+        title: "Gladiator", 
+        year: NumberInt(2000),
+        cast: ["Joaquin Phoenix", "Russell Crowe"],
+        directors: ["Ridley Scott"],
+        countries: ["United States"],
+        genres: ["Adventure", "Action"]    
+    }
+]);
+
+//invalid documents
+
+// year missing
+db.movies.insertOne(
+    {
+        title: "Brother Bear", 
+        cast: ["Joaquin Phoenix", "Jeremy Suarez"],
+        directors: ["Aaron Blaise", "Robert Walker"],
+        countries: ["United States"],
+        genres: ["Adventure", "Comedy"]    
+    }
+);
+
+// duplicated item in cast
+db.movies.insertOne(
+    {
+        title: "The Joker", 
+        year: NumberInt(2019),
+        cast: ["Joaquin Phoenix", "Joaquin Phoenix"],
+        directors: ["Todd Phillips"],
+        countries: ["United States"],
+        genres: ["Suspense", "Crime"]    
+    }
+);
+
+// Ej. 5
+
+db.createCollection("userProfile", 
+    {
+        validator: {
+            $jsonSchema: {
+                bsonType: "object",
+                required: ["user_id", "language"],
+                properties: {
+                    user_id: {
+                        bsonType: "objectId"
+                    },
+                    language: {
+                        enum: ["English", "Spanish", "Portuguese"]
+                    },
+                    favorite_genres: {
+                        bsonType: "array",
+                        items: {
+                            bsonType: "string"
+                        },
+                        uniqueItems: true,
+                    }
+                }
+            }
+        }
+
+    }
+);
+
+//valid documents
+db.userProfile.insertMany([
+    {user_id: ObjectId('6902331d30f9226e2b80b097'), language: "Spanish"},
+    {user_id: ObjectId('6902341f30a7886e2b80b092'), language: "Spanish", favorite_genres: ["Suspense"]}
+]);
+
+//invalid documents
+
+// requirements fail (user_id missing)
+
+db.userProfile.insertOne(
+    {language: "Spanish"},
+);
+
+// duplicated value in array
+
+db.userProfile.insertOne(
+    {user_id: ObjectId('55555777ddde6fa7cb7a889a'), language: "Spanish", favorite_genres: ["Suspense", "Suspense"]}
+);
+
+// Ej. 6
+
+use('shop');
+
+db.createCollection("books",
+    {
+        validator: {
+            $jsonSchema: {
+                bsonType: "object",
+                required: ["book_id", "title", "author", "price"],
+                properties: {
+                    book_id: {
+                        bsonType: "int"
+                    },
+                    title: {
+                        bsonType: "string",
+                        maxLength: 70
+                    },
+                    author: {
+                        bsonType: "string",
+                        maxLength: 70
+                    },
+                    price: {
+                        bsonType: "double"
+                    },
+                    categories: {
+                        bsonType: "array",
+                        items: {
+                            bsonType: "string"
+                        },
+                        uniqueItems: true
+                    }
+                }
+            }
+        }
+    }
+);
+
+db.createCollection("orders",
+    {
+        validator: {
+            $and: [
+                {
+                    $jsonSchema: {
+                        bsonType: "object",
+                        required: ["order_id", "delivery_address", "detail"],
+                        properties: {
+                            order_id: {
+                                bsonType: "int"
+                            },
+                            delivery_name: {
+                                bsonType: "string",
+                                maxLength: 70
+                            },
+                            delivery_address: {
+                                bsonType: "string",
+                                maxLength: 70
+                            },
+                            cc_name: {
+                                bsonType: "string",
+                                maxLength: 70
+                            },
+                            cc_number: {
+                                bsonType: "string",
+                                maxLength: 32
+                            },
+                            cc_expiry: {
+                                bsonType: "string",
+                                maxLength: 20
+                            },
+                            detail: {
+                                bsonType: "array",
+                                items: {
+                                    bsonType: "object",
+                                    required: ["book_id","quantity", "price", "total_price"],
+                                    properties: {
+                                        book_id: {
+                                            bsonType: "int"
+                                        },
+                                        quantity: {
+                                            bsonType: "int"
+                                        },
+                                        price: {
+                                            bsonType: "double"
+                                        },
+                                        total_price: {
+                                            bsonType: "double"
+                                        }
+
+                                    }
+                                }
+                                
+                            }
+                        }
+                    },
+                    $expr: {
+                        $allElementsTrue: {
+                            $map: {
+                                input: "$detail",
+                                in: {
+                                    $eq: [
+                                        "$$this.total_price",
+                                        {$multiply: ["$$this.quantity", "$$this.price"]}
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+);

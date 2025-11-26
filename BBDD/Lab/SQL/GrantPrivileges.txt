@@ -1,0 +1,3 @@
+mysql -u root 
+GRANT ALL PRIVILEGES ON *.* TO 'bbdd2025'@'localhost' WITH GRANT OPTION; (for grant)
+FLUSH PRIVILEGES;
